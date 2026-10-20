@@ -1,0 +1,47 @@
+{
+  "skill_name": "skills-management",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "整理一下 skills",
+      "expected_output": "扫描 ~/.agents/skills/ 全部 skill，生成六章结构的 skills-description.md 与行动项清单 skills-health.md，覆盖旧文件，并在对话里打印变化摘要。",
+      "files": [],
+      "expectations": [
+        "运行了 scripts/scan.py（或等价的目录扫描）而不是纯手工逐个翻文件",
+        "生成了 ~/.agents/skills/skills-description.md，包含与 references/doc-template.md 一致的六个章节（总览 / 主表 / 关系图 / 依赖矩阵 / 组合工作流 / 注意事项）",
+        "生成了 ~/.agents/skills/skills-health.md，且采用『必处理 / 建议处理 / 仅记录 / 已处理』四分区结构",
+        "主表每一行覆盖全部 skill（与 scan.json 的 skills 数量一致），且列出 功能 / 内容 / 适用领域 / 关联 / 触发方式 / 产物 六个列",
+        "两个产物文件都是直接覆盖写出的，没有生成 skills-description-1.md / .bak 之类的历史副本",
+        "对话中打印了本次变化摘要（skill 总数、新增或删除的 skill、断链数量）",
+        "被检查的 skill 文件一个都没被改动：outputs/sha_diff.txt 为空（逐文件 sha256 前后比对无差异）。这条是二值判定，不接受「有意的修复」之类的解释"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "这些 skill 有重复吗？顺便把 skills-description 更新一下",
+      "expected_output": "识别功能重叠的 skill 并给出证据与建议，同时照常覆盖更新两份文档；重叠项进入 skills-health.md 的『仅记录』区。",
+      "files": [],
+      "expectations": [
+        "对比了各 skill 的 frontmatter description 与正文，而非仅凭目录名猜测",
+        "若存在重叠，给出了具体证据（重合的 description 片段或相同的阶段划分）而不是『感觉相似』",
+        "重叠结论被写入 skills-health.md 的『仅记录（需人工判断，勿直接照做）』区，而不是『必处理』区",
+        "没有自动删除任何 skill；如给出删除建议，附带确切的 rm -rf 命令",
+        "skills-description.md 的第六章『注意事项』中同时记录了重叠线索并注明是待人工判断的线索"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "skill 体检一下，看看有没有指向已删除 skill 的断链引用",
+      "expected_output": "跑完 11 项检查规则，断链引用被完整列出并落到依赖矩阵与体检清单中，文档结构保持固定六章不变。",
+      "files": [],
+      "expectations": [
+        "对 scan.json 的 unknown_slash_refs 逐个做了语义判断，区分了真正的失效引用与模板占位符、反向提及、普通路径",
+        "失效引用在 skills-description.md 的『依赖矩阵』章节中按 skill 点名（哪一列、缺哪个依赖）",
+        "失效引用同时出现在 skills-health.md 的『必处理』区，含现象与建议动作",
+        "孤儿 skill 与疑似指令冲突若被提及，措辞上只陈述事实（『未被其他 skill 引用』），未下『应当删除』的结论",
+        "frontmatter 缺失或 description 过弱、超长（>500 行）、硬编码绝对路径这三项检查各自有结论",
+        "关系图中的断链处用『（缺失）』或等价方式标注"
+      ]
+    }
+  ]
+}
